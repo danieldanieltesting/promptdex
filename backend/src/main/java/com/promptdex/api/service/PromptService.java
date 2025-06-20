@@ -1,4 +1,3 @@
-// src/main/java/com/promptdex/api/service/PromptService.java
 package com.promptdex.api.service;
 
 import com.promptdex.api.dto.CreatePromptRequest;
@@ -10,6 +9,10 @@ import com.promptdex.api.model.Review;
 import com.promptdex.api.model.User;
 import com.promptdex.api.repository.PromptRepository;
 import com.promptdex.api.repository.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,10 +37,16 @@ public class PromptService {
     }
 
     @Transactional(readOnly = true)
-    public List<PromptDto> getAllPrompts() {
-        return promptRepository.findAll().stream()
-                .map(this::convertToDto)
-                .collect(Collectors.toList());
+    public Page<PromptDto> searchAndPagePrompts(String searchTerm, int page, int size) {
+        // Create a Pageable object to define the page number, size, and sorting order.
+        // We will sort by creation date in descending order by default.
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+
+        // Call the new repository method
+        Page<Prompt> promptPage = promptRepository.searchAndPagePrompts(searchTerm, pageable);
+
+        // Map the Page<Prompt> to a Page<PromptDto> using the existing converter
+        return promptPage.map(this::convertToDto);
     }
 
     @Transactional(readOnly = true)
@@ -96,17 +105,12 @@ public class PromptService {
         promptRepository.delete(prompt);
     }
 
-    // --- MODIFIED AND CORRECTED HELPER METHOD ---
     private PromptDto convertToDto(Prompt prompt) {
-        // --- DEFENSIVE NULL-CHECKING START ---
-        // This prevents NullPointerExceptions if a timestamp is ever null in the entity.
         LocalDateTime createdAt = prompt.getCreatedAt();
         LocalDateTime updatedAt = prompt.getUpdatedAt();
 
         Instant createdAtInstant = (createdAt != null) ? createdAt.toInstant(ZoneOffset.UTC) : null;
         Instant updatedAtInstant = (updatedAt != null) ? updatedAt.toInstant(ZoneOffset.UTC) : null;
-        // --- DEFENSIVE NULL-CHECKING END ---
-
 
         List<Review> reviews = prompt.getReviews();
 
@@ -120,7 +124,6 @@ public class PromptService {
         List<ReviewDto> reviewDtos = (reviews != null)
                 ? reviews.stream()
                 .map(review -> {
-                    // Also adding a null check for review timestamps for robustness
                     LocalDateTime reviewCreatedAt = review.getCreatedAt();
                     Instant reviewCreatedAtInstant = (reviewCreatedAt != null) ? reviewCreatedAt.toInstant(ZoneOffset.UTC) : null;
 
@@ -143,8 +146,8 @@ public class PromptService {
                 prompt.getTargetAiModel(),
                 prompt.getCategory(),
                 prompt.getAuthor().getUsername(),
-                createdAtInstant,   // Pass the safe, potentially null Instant
-                updatedAtInstant,   // Pass the safe, potentially null Instant
+                createdAtInstant,
+                updatedAtInstant,
                 averageRating,
                 reviewDtos
         );

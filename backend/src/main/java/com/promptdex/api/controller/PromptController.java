@@ -1,10 +1,10 @@
-// src/main/java/com/promptdex/api/controller/PromptController.java
 package com.promptdex.api.controller;
 
 import com.promptdex.api.dto.CreatePromptRequest;
 import com.promptdex.api.dto.PromptDto;
 import com.promptdex.api.service.PromptService;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -13,7 +13,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.AccessDeniedException;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -27,9 +26,13 @@ public class PromptController {
     }
 
     @GetMapping
-    public ResponseEntity<List<PromptDto>> getAllPrompts() {
-        List<PromptDto> prompts = promptService.getAllPrompts();
-        return ResponseEntity.ok(prompts);
+    public ResponseEntity<Page<PromptDto>> getAllPrompts(
+            @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "12") int size
+    ) {
+        Page<PromptDto> promptsPage = promptService.searchAndPagePrompts(search, page, size);
+        return ResponseEntity.ok(promptsPage);
     }
 
     @GetMapping("/{id}")
@@ -45,14 +48,12 @@ public class PromptController {
         return new ResponseEntity<>(createdPrompt, HttpStatus.CREATED);
     }
 
-    // --- NEW METHOD START ---
     @PutMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<PromptDto> updatePrompt(@PathVariable UUID id, @Valid @RequestBody CreatePromptRequest request, @AuthenticationPrincipal UserDetails userDetails) throws AccessDeniedException {
         PromptDto updatedPrompt = promptService.updatePrompt(id, request, userDetails.getUsername());
         return ResponseEntity.ok(updatedPrompt);
     }
-    // --- NEW METHOD END ---
 
     @DeleteMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
