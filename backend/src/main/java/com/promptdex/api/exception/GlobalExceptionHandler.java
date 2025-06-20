@@ -1,4 +1,3 @@
-// src/main/java/com/promptdex/api/exception/GlobalExceptionHandler.java
 package com.promptdex.api.exception;
 
 import com.promptdex.api.dto.ErrorResponse;
@@ -6,12 +5,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException; // <-- IMPORT THIS
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.context.request.WebRequest;
 
-import java.nio.file.AccessDeniedException;
 import java.time.Instant;
 import java.util.stream.Collectors;
 
@@ -19,6 +19,16 @@ import java.util.stream.Collectors;
 public class GlobalExceptionHandler {
 
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    // --- START OF NEW HANDLER ---
+    // Handler for bad login credentials (wrong username/password)
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentialsException(BadCredentialsException ex, WebRequest request) {
+        // We return a 401 Unauthorized status, which is the correct code for this error.
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), "Invalid username or password", Instant.now());
+        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+    // --- END OF NEW HANDLER ---
 
     // Handler for our custom "Not Found" exception
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -30,14 +40,23 @@ public class GlobalExceptionHandler {
     // Handler for registration errors (username/email already taken)
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<ErrorResponse> handleIllegalStateException(IllegalStateException ex, WebRequest request) {
+        // This is often a 400 Bad Request, but could also be a 409 Conflict depending on the context.
+        // For registration (e.g., "username taken"), 409 might be better. Let's stick to BAD_REQUEST for now.
         ErrorResponse errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), Instant.now());
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
-    // Handler for security-related access denied errors
+    // Handler for duplicate review submission conflict
+    @ExceptionHandler(ReviewAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleReviewAlreadyExistsException(ReviewAlreadyExistsException ex, WebRequest request) {
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage(), Instant.now());
+        return new ResponseEntity<>(errorResponse, HttpStatus.CONFLICT);
+    }
+
+    // Handler for security-related access denied errors (e.g. trying to edit someone else's prompt)
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDeniedException(AccessDeniedException ex, WebRequest request) {
-        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage(), Instant.now());
+        ErrorResponse errorResponse = new ErrorResponse(HttpStatus.FORBIDDEN.value(), "Access Denied: You do not have permission to perform this action.", Instant.now());
         return new ResponseEntity<>(errorResponse, HttpStatus.FORBIDDEN);
     }
 
