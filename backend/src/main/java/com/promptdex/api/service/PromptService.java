@@ -36,16 +36,23 @@ public class PromptService {
         this.userRepository = userRepository;
     }
 
+    // ... existing methods (searchAndPagePrompts, getPromptById, etc.) ...
+
     @Transactional(readOnly = true)
     public Page<PromptDto> searchAndPagePrompts(String searchTerm, int page, int size) {
-        // Create a Pageable object to define the page number, size, and sorting order.
-        // We will sort by creation date in descending order by default.
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-
-        // Call the new repository method
         Page<Prompt> promptPage = promptRepository.searchAndPagePrompts(searchTerm, pageable);
+        return promptPage.map(this::convertToDto);
+    }
 
-        // Map the Page<Prompt> to a Page<PromptDto> using the existing converter
+    @Transactional(readOnly = true)
+    public Page<PromptDto> getPromptsByAuthorUsername(String username, int page, int size) {
+        // First, check if the user exists to provide a clear 404 error if not.
+        userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with username: " + username));
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Prompt> promptPage = promptRepository.findByAuthor_Username(username, pageable);
         return promptPage.map(this::convertToDto);
     }
 

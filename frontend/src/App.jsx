@@ -1,33 +1,23 @@
 // frontend/src/App.jsx
 import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-
-// Import Core Libraries for UI Polish
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-// Import Reusable Components
 import Navbar from './components/Navbar.jsx';
 import ProtectedRoute from './components/ProtectedRoute.jsx';
-
-// Import Page Components
 import HomePage from './pages/HomePage.jsx';
 import LoginPage from './pages/LoginPage.jsx';
 import RegisterPage from './pages/RegisterPage.jsx';
 import PromptsListPage from './pages/PromptsListPage.jsx';
 import PromptDetailPage from './pages/PromptDetailPage.jsx';
 import CreatePromptPage from './pages/CreatePromptPage.jsx';
-// --- NEW IMPORT START ---
 import EditPromptPage from './pages/EditPromptPage.jsx';
-// --- NEW IMPORT END ---
+import UserProfilePage from './pages/UserProfilePage.jsx'; // <-- IMPORT NEW PAGE
 
 function App() {
   return (
     <BrowserRouter>
-      {/* 
-        The ToastContainer is placed here at the top level.
-        It listens for `toast()` calls from anywhere in the app and renders the notification.
-      */}
       <ToastContainer
         position="top-right"
         autoClose={3000}
@@ -43,7 +33,6 @@ function App() {
 
       <Navbar />
 
-      {/* Main content area with responsive padding */}
       <main className="container mx-auto p-4 sm:p-6">
         <Routes>
           {/* --- Public Routes --- */}
@@ -52,14 +41,12 @@ function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/prompts" element={<PromptsListPage />} />
           <Route path="/prompts/:id" element={<PromptDetailPage />} />
+          <Route path="/profile/:username" element={<UserProfilePage />} /> {/* <-- ADD NEW ROUTE */}
 
           {/* --- Protected Routes --- */}
           <Route element={<ProtectedRoute />}>
             <Route path="/create-prompt" element={<CreatePromptPage />} />
-            {/* --- NEW ROUTE START --- */}
             <Route path="/prompts/:id/edit" element={<EditPromptPage />} />
-            {/* --- NEW ROUTE END --- */}
-            {/* Future protected routes like /profile would go here */}
           </Route>
           
           {/* --- Catch-all 404 Route --- */}

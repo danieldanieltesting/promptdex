@@ -27,4 +27,13 @@ public interface PromptRepository extends JpaRepository<Prompt, UUID> {
             "LOWER(p.promptText) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
     Page<Prompt> searchAndPagePrompts(@Param("searchTerm") String searchTerm, Pageable pageable);
 
+    /**
+     * Finds a paginated list of prompts created by a specific user.
+     *
+     * @param username The username of the author.
+     * @param pageable The pagination information.
+     * @return A Page of Prompts by the given author.
+     */
+    Page<Prompt> findByAuthor_Username(String username, Pageable pageable);
+
 }

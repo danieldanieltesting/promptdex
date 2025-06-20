@@ -86,6 +86,7 @@ Thumbs.db
 # Vite cache
 .vite
 
-
+# personal
 # commands
 commands.txt
+seed_prompts.sh
