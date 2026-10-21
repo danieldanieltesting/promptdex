@@ -15,9 +15,9 @@ services:
       - postgres_data:/var/lib/postgresql/data
     environment:
       # Set credentials for the database. The backend will use these to connect.
-      - POSTGRES_USER=promptdex
-      - POSTGRES_PASSWORD=password
-      - POSTGRES_DB=promptdex_db
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD fehlt}
+      - POSTGRES_DB=${POSTGRES_DB}
     restart: unless-stopped
 
   # --- Spring Boot Backend Service ---
@@ -33,13 +33,13 @@ services:
     environment:
       # Configure the database connection for the Spring application.
       # It connects to the 'db' service on the internal Docker network.
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/promptdex_db
-      - SPRING_DATASOURCE_USERNAME=promptdex
-      - SPRING_DATASOURCE_PASSWORD=password
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/${POSTGRES_DB}
+      - SPRING_DATASOURCE_USERNAME=${POSTGRES_USER}
+      - SPRING_DATASOURCE_PASSWORD=${POSTGRES_PASSWORD}
       # This tells Hibernate to create/update tables based on entities at startup.
       - SPRING_JPA_HIBERNATE_DDL_AUTO=update
       # The secret key for JWT generation. Should be a long, random string in production.
-      - JWT_SECRET=your-super-secret-and-long-jwt-key-that-is-at-least-512-bits
+      - JWT_SECRET=${JWT_SECRET:?JWT_SECRET fehlt}
       # Define the allowed redirect URI for OAuth2.
       - APP_OAUTH2_AUTHORIZED-REDIRECT-URIS_0=http://localhost:5173/oauth2/redirect
     depends_on:

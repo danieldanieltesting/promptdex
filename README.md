@@ -1,261 +1,307 @@
-# 🌟 PromptDex: AI Prompt Collaboration Platform 🌟
+# PromptDex
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-<!-- Optional: Add build status, code coverage, etc. badges here -->
-<!-- [![Build Status](https://travis-ci.org/your-username/promptdex.svg?branch=main)](https://travis-ci.org/your-username/promptdex) -->
+A full-stack platform for discovering, sharing and rating AI prompts – built with a Spring Boot REST API, a React user app and a React/TypeScript admin panel.
 
-Welcome to PromptDex, your ultimate hub for discovering, creating, and sharing AI prompts! Whether you're a seasoned AI enthusiast or just starting, PromptDex provides the tools and community to elevate your prompt engineering skills.
+![Java](https://img.shields.io/badge/Java-17-007396)
+![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.5-6DB33F)
+![React](https://img.shields.io/badge/React-18_%7C_19-61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED)
+![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
----
+**At a glance**
 
-## 🚀 Features
-
-### User-Facing Platform:
-*   👤 **Authentication:** Secure user registration and login (local & OAuth2/OIDC via Google).
-*   ✨ **Prompt Creation & Management:** Intuitive interface to create, edit, and manage your AI prompts (title, prompt text, description, target AI model, category).
-*   🔍 **Advanced Search & Discovery:**
-    *   Keyword search across prompt titles, descriptions, and text.
-    *   Filter prompts by tags and categories.
-    *   Paginated and sortable prompt listings.
-*   🌟 **Reviews & Ratings:** Share your experience by reviewing and rating prompts. Average ratings help identify quality content.
-*   🔖 **Bookmarking:** Save your favorite prompts for quick access.
-*   🏷️ **Tagging System:** Organize and find prompts easily with a flexible tagging system.
-*   👥 **User Profiles:** Showcase your contributions and discover prompts by other users.
-*   👣 **Follow System:** (Backend support) Follow other users to keep up with their creations.
-
-### 👑 Administration Panel:
-*   🛡️ **Secure Access:** Dedicated admin login and role-based access control.
-*   📊 **Dashboard Overview:** At-a-glance statistics (total users, prompts, reviews).
-*   🧑‍💼 **User Management:**
-    *   View all registered users with pagination.
-    *   Search users by username or email.
-    *   Edit user roles (e.g., assign/revoke `ROLE_ADMIN`, `ROLE_MODERATOR`).
-*   📝 **Prompt Management:**
-    *   View all prompts with pagination.
-    *   Search prompts by title, content, author, category, or tags.
-    *   Delete prompts.
-*   💬 **Review Management:**
-    *   View all reviews with pagination.
-    *   Search reviews by comment content, author, or prompt title.
-    *   Delete reviews.
+- 36 REST endpoints in a layered Spring Boot backend
+- Stateless JWT authentication, social login with Google and GitHub, role-based access control
+- 88 automated unit and integration tests
+- Two React frontends: a public user app and an admin panel
+- The complete platform starts with a single `docker compose up`
 
 ---
 
-## 🛠️ Technology Stack
+## Contents
 
-### Backend (Spring Boot API - `promptdex-api`)
-*   **Language:** Java 17+
-*   **Framework:** Spring Boot 3.x
-    *   Spring Web (RESTful APIs)
-    *   Spring Data JPA (with Hibernate as ORM)
-    *   Spring Security (Authentication, Authorization, JWT, OAuth2/OIDC)
-*   **Database:** PostgreSQL (or any JPA-compatible relational database like MySQL, H2)
-*   **Build Tool:** Maven
-*   **Key Dependencies:**
-    *   `spring-boot-starter-data-jpa`
-    *   `spring-boot-starter-web`
-    *   `spring-boot-starter-security`
-    *   `spring-boot-starter-validation`
-    *   `jjwt` (for JWT handling)
-    *   `spring-boot-starter-oauth2-client`
-    *   `lombok` (for boilerplate code reduction)
-    *   `postgresql` (or your chosen DB driver)
-
-### Main Frontend (User-Facing - `promptdex-frontend` - *Conceptual*)
-*   **Framework/Library:** Vite + React (TypeScript)
-*   **Styling:** CSS Modules / Styled-Components / Tailwind CSS (TBD)
-*   **State Management:** Zustand (or Redux Toolkit, Context API)
-*   **Routing:** React Router DOM
-*   **API Client:** Axios
-
-### Admin Panel Frontend (`promptdex-admin-frontend`)
-*   **Framework/Library:** Vite + React (TypeScript)
-*   **Styling:** Inline CSS / CSS Modules (Potential for UI Library integration)
-*   **State Management:** Zustand
-*   **Routing:** React Router DOM
-*   **API Client:** Axios
+- [Features](#features)
+- [Architecture](#architecture)
+- [Security](#security)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Creating the first admin](#creating-the-first-admin)
+- [Running the tests](#running-the-tests)
+- [API overview](#api-overview)
+- [Roadmap](#roadmap)
+- [License](#license)
 
 ---
 
-## 📚 Project Structure (Simplified)
+## Features
+
+### User app
+
+- **Accounts:** registration and login with username and password, or with a Google or GitHub account
+- **Prompts:** create, edit and delete prompts with title, prompt text, description, target AI model, category and tags
+- **Search:** keyword search across title, description and prompt text, combined with tag filters; results are paginated and sorted by newest first
+- **Reviews and ratings:** rate and review prompts; each prompt shows its average rating
+- **Bookmarks and collections:** save prompts and organize them into named collections
+- **Social:** user profiles, following other users, and a personal activity feed with the latest prompts from followed users
+
+### Admin panel
+
+- **Dashboard** with totals for users, prompts and reviews
+- **User management:** paginated list, search by username or email, edit roles
+- **Content moderation:** paginated lists of prompts and reviews with search and delete
+- Accessible only to accounts with `ROLE_ADMIN`
+
+---
+
+## Architecture
+
+```mermaid
+flowchart LR
+    U["User app<br/>React · JavaScript · Tailwind CSS"] -->|"REST + JWT"| API
+    A["Admin panel<br/>React · TypeScript · Zustand"] -->|"REST + JWT"| API
+    API["Spring Boot API<br/>Spring Security · Spring Data JPA"] --> DB[("PostgreSQL")]
+    API <-->|"OAuth2 / OIDC"| P["Google · GitHub"]
 ```
 
+The backend follows a layered design:
+
+| Layer | Responsibility |
+|---|---|
+| `controller` | REST endpoints for users and admins, request validation |
+| `service` | Business logic and transactions |
+| `repository` | Spring Data JPA repositories; JPQL queries with `JOIN FETCH` to avoid N+1 queries |
+| `dto` / `mapper` | Request and response objects, decoupled from the JPA entities |
+| `security` | JWT filter and token provider, OAuth2/OIDC user services |
+| `exception` | Global exception handler with consistent error responses |
+
+---
+
+## Security
+
+- **Stateless authentication:** every request carries a signed JWT (HMAC, valid for 24 hours by default); no server-side sessions
+- **Social login:** OAuth2 with GitHub and OpenID Connect with Google; new users are registered automatically on first login
+- **Passwords** are hashed with BCrypt
+- **Role-based access control** on two levels: URL rules in the security filter chain and `@PreAuthorize` on admin controllers and services
+- **CORS** is restricted to the local frontend origins
+
+---
+
+## Tech stack
+
+| Area | Technologies |
+|---|---|
+| Backend | Java 17, Spring Boot 3.5, Spring Web, Spring Security, Spring Data JPA (Hibernate), Bean Validation, JJWT, Lombok, Maven |
+| Database | PostgreSQL 16; H2 in-memory for tests |
+| User app | React 18, JavaScript, Vite, Tailwind CSS, React Router, Axios |
+| Admin panel | React 19, TypeScript, Vite, Zustand, React Router, Axios |
+| Testing | JUnit 5, Mockito, MockMvc, Spring Security Test, `@DataJpaTest` |
+| Deployment | Docker multi-stage builds, Docker Compose, Nginx for the user app |
+
+---
+
+## Project structure
+
+```
 promptdex/
-├── promptdex-api/                  # Backend Spring Boot application
-│   ├── src/
-│   │   └── main/
-│   │       ├── java/
-│   │       │   └── com/promptdex/api/
-│   │       │       ├── config/         # Security, CORS, etc.
-│   │       │       ├── controller/     # REST API controllers (user & admin)
-│   │       │       ├── dto/            # Data Transfer Objects
-│   │       │       ├── exception/      # Custom exceptions & handlers
-│   │       │       ├── mapper/         # Entity-DTO mappers
-│   │       │       ├── model/          # JPA Entities
-│   │       │       ├── repository/     # Spring Data JPA repositories
-│   │       │       ├── security/       # JWT providers, UserDetails services
-│   │       │       └── service/        # Business logic
-│   │       └── resources/              # application.properties, static assets for backend
-│   └── pom.xml                       # Maven project file
-│
-├── promptdex-frontend/             # Main User-Facing Frontend (Conceptual)
-│   ├── public/                       # Static assets
-│   ├── src/
-│   │   ├── assets/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── stores/
-│   │   └── App.tsx                   # Main application component
-│   ├── index.html
-│   ├── package.json
-│   └── vite.config.ts
-│
-└── promptdex-admin-frontend/       # Admin Panel Frontend
-    ├── public/                       # Static assets
-    ├── src/
-    │   ├── components/
-    │   ├── layouts/                  # AdminLayout.tsx
-    │   ├── pages/                    # LoginPage, DashboardPage, UserManagementPage, etc.
-    │   ├── services/                 # apiClient.ts
-    │   ├── stores/                   # authStore.ts
-    │   └── App.tsx                   # Main admin application component
-    ├── index.html
-    ├── package.json
-    └── vite.config.ts
+├── backend/                     Spring Boot REST API
+│   ├── src/main/java/com/promptdex/api/
+│   │   ├── config/              security, CORS, application properties
+│   │   ├── controller/          REST controllers (admin/ for the admin API)
+│   │   ├── dto/                 request and response objects
+│   │   ├── exception/           custom exceptions, global handler
+│   │   ├── mapper/              entity-to-DTO mapping
+│   │   ├── model/               JPA entities
+│   │   ├── repository/          Spring Data JPA repositories
+│   │   ├── security/            JWT and OAuth2/OIDC
+│   │   └── service/             business logic
+│   ├── src/test/                unit and integration tests
+│   └── Dockerfile
+├── frontend/                    user app (React, JavaScript, Tailwind CSS)
+│   ├── Dockerfile
+│   └── nginx.conf
+├── promptdex-admin-frontend/    admin panel (React, TypeScript, Zustand)
+├── docker-compose.yml
+└── .env.example
 ```
 
+---
+
+## Getting started
+
+### Option A: Docker Compose (recommended)
+
+Requirements: Docker with Docker Compose.
+
+```bash
+git clone https://github.com/danieldanieltesting/promptdex.git
+cd promptdex
+cp .env.example .env        # then set your own values in .env
+docker compose up --build
+```
+
+| Service | URL |
+|---|---|
+| User app | http://localhost:5173 |
+| REST API | http://localhost:8080/api |
+| PostgreSQL | localhost:5432 |
+
+The admin panel is not part of the Compose setup. Start it locally as described in step 4 below.
+
+### Option B: Local development
+
+Requirements: JDK 17 or newer, Node.js 20 or newer, and PostgreSQL 16 (or start only the database with `docker compose up -d db`).
+
+**1. Configure the backend.** Create `backend/src/main/resources/application.properties`. This file is ignored by Git, so your credentials stay local.
+
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/promptdex_db
+spring.datasource.username=promptdex
+spring.datasource.password=change-me
+spring.jpa.hibernate.ddl-auto=update
+
+jwt.secret=change-me-to-a-long-random-string
+jwt.expirationInMs=86400000
+
+app.oauth2.authorized-redirect-uris[0]=http://localhost:5173/oauth2/redirect
+
+spring.security.oauth2.client.registration.google.client-id=your-google-client-id
+spring.security.oauth2.client.registration.google.client-secret=your-google-client-secret
+spring.security.oauth2.client.registration.github.client-id=your-github-client-id
+spring.security.oauth2.client.registration.github.client-secret=your-github-client-secret
+```
+
+The four OAuth2 entries must exist for the application to start. If you don't need social login, keep the placeholder values.
+
+**2. Start the backend.**
+
+```bash
+cd backend
+./mvnw spring-boot:run      # on Windows: mvnw.cmd spring-boot:run
+```
+
+**3. Start the user app.**
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+**4. Start the admin panel.**
+
+```bash
+cd promptdex-admin-frontend
+npm install
+npm run dev
+```
+
+If the user app already runs on port 5173, Vite starts the admin panel on the next free port, usually 5174.
 
 ---
 
-## 🚀 Getting Started
+## Configuration
 
-### Prerequisites
-*   Java JDK 17 or newer
-*   Maven 3.6+
-*   Node.js 18.x or newer (with npm or yarn)
-*   A running PostgreSQL instance (or other configured relational database)
+With Docker Compose, all secrets are read from `.env`, which is excluded from Git. `.env.example` lists every variable.
 
-### 1. Backend Setup (`promptdex-api`)
+| Variable | Required | Description |
+|---|---|---|
+| `POSTGRES_USER` | no | Database user (default: `promptdex`) |
+| `POSTGRES_PASSWORD` | yes | Database password |
+| `POSTGRES_DB` | no | Database name (default: `promptdex_db`) |
+| `JWT_SECRET` | yes | Key for signing JWTs, at least 64 characters. Generate one with `openssl rand -hex 64` |
+| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | no | Credentials for Google login |
+| `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | no | Credentials for GitHub login |
 
-1.  **Clone the repository:**
-    ```bash
-    git clone https://github.com/your-username/promptdex.git
-    cd promptdex/promptdex-api
-    ```
+Without OAuth2 credentials the application still starts; login with username and password works, social login does not.
 
-2.  **Configure Database:**
-    *   Open `src/main/resources/application.properties` (or `application.yml`).
-    *   Update the `spring.datasource.url`, `spring.datasource.username`, and `spring.datasource.password` properties to match your database setup.
-    *   Ensure your database (e.g., `promptdex_db`) is created.
+**Setting up social login**
 
-3.  **Configure OAuth2 (Optional - for Google Login):**
-    *   If you want to use Google login, obtain OAuth2 credentials from Google Cloud Console.
-    *   Update the `spring.security.oauth2.client.registration.google.*` properties in `application.properties`.
-
-4.  **Build and Run:**
-    ```bash
-    mvn spring-boot:run
-    ```
-    The backend API will typically start on `http://localhost:8080`.
-
-### 2. Admin Panel Frontend Setup (`promptdex-admin-frontend`)
-
-1.  **Navigate to the admin frontend directory:**
-    ```bash
-    cd ../promptdex-admin-frontend # From promptdex-api directory, or cd promptdex/promptdex-admin-frontend from root
-    ```
-
-2.  **Install dependencies:**
-    ```bash
-    npm install
-    # or
-    # yarn install
-    ```
-
-3.  **Configure API Base URL (if needed):**
-    *   The `apiClient.ts` (`src/services/apiClient.ts`) is configured to point to `http://localhost:8080/api`. If your backend runs on a different port or domain, update this.
-
-4.  **Run the development server:**
-    ```bash
-    npm run dev
-    # or
-    # yarn dev
-    ```
-    The admin panel will typically start on `http://localhost:5173` (or another port specified by Vite).
-
-### 3. (Conceptual) Main Frontend Setup (`promptdex-frontend`)
-*(Instructions would be similar to the admin panel setup once this part is developed)*
-
-1.  Navigate to `promptdex/promptdex-frontend`.
-2.  Run `npm install` or `yarn install`.
-3.  Run `npm run dev` or `yarn dev`.
+| Provider | Where to create the app | Redirect / callback URL |
+|---|---|---|
+| Google | Google Cloud Console → APIs & Services → Credentials | `http://localhost:8080/login/oauth2/code/google` |
+| GitHub | GitHub → Settings → Developer settings → OAuth Apps | `http://localhost:8080/login/oauth2/code/github` |
 
 ---
 
-## 🔑 Initial Admin User
+## Creating the first admin
 
-To access the admin panel, you'll need an admin user.
-1.  Register a new user through the main application's registration flow (if available) or directly if the backend supports it.
-2.  Manually update the user's role in the database:
-    *   Connect to your database.
-    *   Locate the `users` table and the `user_roles` join table (or the `roles` column in the `users` table if roles are stored directly as a collection of strings/enums).
-    *   Assign the `ROLE_ADMIN` to your chosen user.
-    *   *Example SQL (if roles are in a separate join table `user_roles` linking `users.id` to a `roles.id` where `roles.name` is 'ROLE_ADMIN'):*
-        ```sql
-        -- Find your user_id and the role_id for 'ROLE_ADMIN'
-        INSERT INTO user_roles (user_id, role_id) VALUES ('your_user_uuid', 'admin_role_uuid');
-        ```
-    *   *Example SQL (if roles are an element collection directly in the `users` table, e.g., a `roles` text array in PostgreSQL):*
-        ```sql
-        UPDATE users SET roles = array_append(roles, 'ROLE_ADMIN') WHERE username = 'your_admin_username';
-        -- Or if it's a new user and roles column allows direct set:
-        -- UPDATE users SET roles = '{ROLE_USER,ROLE_ADMIN}' WHERE username = 'your_admin_username';
-        ```
-    Consult your specific database schema for the exact SQL.
+New accounts receive `ROLE_USER`. To access the admin panel, register a user in the user app and grant the admin role in the database:
+
+```sql
+INSERT INTO user_roles (user_id, role_name)
+SELECT id, 'ROLE_ADMIN' FROM users WHERE username = 'your-username';
+```
+
+With Docker Compose, open a database shell with:
+
+```bash
+docker exec -it promptdex-db psql -U promptdex -d promptdex_db
+```
+
+Log in to the admin panel again afterwards so that the new role is included in the token.
 
 ---
 
-## 🛣️ Roadmap & Future Enhancements
+## Running the tests
 
-*   **Tier 3.5 (Admin Panel - Ongoing):**
-    *   [⬜] Advanced Filtering (by role, category, rating).
-    *   [⬜] Enhanced UI/UX (Component library integration, improved error notifications).
-    *   [⬜] Reusable UI Components (DataTable, Modals).
-    *   [⬜] More detailed statistics on the Dashboard.
-*   **Tier 4 (Deployment & Operations):**
-    *   [⬜] Containerization with Docker (`Dockerfile` for backend & frontends, `docker-compose.yml`).
-    *   [⬜] CI/CD Pipeline (e.g., GitHub Actions).
-    *   [⬜] Cloud Deployment (AWS, GCP, Azure).
-*   **User-Facing Enhancements:**
-    *   [⬜] Real-time notifications.
-    *   [⬜] Advanced user profile customization.
-    *   [⬜] Prompt versioning.
-    *   [⬜] Private prompts / collections.
+```bash
+cd backend
+./mvnw test                 # on Windows: mvnw.cmd test
+```
+
+The tests run against an in-memory H2 database, so no PostgreSQL instance is needed.
+
+| Layer | Tests | Approach |
+|---|---|---|
+| Services | 39 | Unit tests with Mockito |
+| Controllers | 40 | Integration tests with `@SpringBootTest` and MockMvc, including authentication and authorization |
+| Repositories | 9 | `@DataJpaTest` against H2 |
 
 ---
 
-## 🤝 Contributing
+## API overview
 
-Contributions are welcome! If you'd like to contribute, please follow these steps:
-1.  Fork the repository.
-2.  Create a new branch (`git checkout -b feature/your-feature-name`).
-3.  Make your changes.
-4.  Commit your changes (`git commit -m 'Add some feature'`).
-5.  Push to the branch (`git push origin feature/your-feature-name`).
-6.  Open a Pull Request.
+All endpoints are prefixed with `/api`. Endpoints marked "auth" require a valid JWT in the `Authorization: Bearer <token>` header.
 
-Please ensure your code adheres to the project's coding standards and includes tests where applicable.
+| Area | Method and path | Access |
+|---|---|---|
+| Auth | `POST /auth/register`, `POST /auth/login` | public |
+| Prompts | `GET /prompts?search=&tags=&page=&size=`, `GET /prompts/{id}`, `GET /prompts/user/{username}` | public |
+| | `POST /prompts`, `PUT /prompts/{id}`, `DELETE /prompts/{id}`, `POST /prompts/{id}/tags` | auth |
+| Bookmarks | `POST /prompts/{id}/bookmark`, `DELETE /prompts/{id}/bookmark`, `GET /prompts/bookmarks`, `GET /users/me/bookmarks` | auth |
+| Reviews | `POST /prompts/{promptId}/reviews`, `PUT /reviews/{reviewId}`, `DELETE /reviews/{reviewId}` | auth |
+| Collections | `GET /collections`, `POST /collections`, `GET /collections/{id}`, `PUT /collections/{id}`, `DELETE /collections/{id}`, `PUT /collections/{id}/prompts/{promptId}`, `DELETE /collections/{id}/prompts/{promptId}` | auth |
+| Users | `GET /users/{username}/profile`, `GET /users/{username}/prompts` | public |
+| | `POST /users/{username}/follow`, `POST /users/{username}/unfollow` | auth |
+| Feed | `GET /feed` | auth |
+| Tags | `GET /tags` | public |
+| Admin | `GET /admin/stats`, `GET /admin/users`, `PUT /admin/users/{userId}/roles`, `GET /admin/prompts`, `DELETE /admin/prompts/{promptId}`, `GET /admin/reviews`, `DELETE /admin/reviews/{reviewId}` | `ROLE_ADMIN` |
 
 ---
 
-## 📜 License
+## Roadmap
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details (you'll need to create this file with MIT license text).
+**Engineering**
+
+- [ ] Continuous integration with GitHub Actions (build and tests on every push)
+- [ ] Database migrations with Flyway instead of `ddl-auto=update`
+- [ ] Refresh tokens and token storage in HttpOnly cookies
+- [ ] Full-text search with PostgreSQL for large datasets
+- [ ] Cloud deployment
+
+**Product**
+
+- [ ] Private prompts and collections
+- [ ] Prompt versioning
+- [ ] Real-time notifications
+- [ ] Advanced filters and charts in the admin panel
 
 ---
 
-## 🙏 Acknowledgements (Optional)
+## License
 
-*   Thanks to the Spring Boot, React, and Vite communities.
-*   Any other libraries or resources you found particularly helpful.
+Released under the MIT License. See [LICENSE](LICENSE) for details.
